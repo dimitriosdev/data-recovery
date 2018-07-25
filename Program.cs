@@ -1,9 +1,9 @@
-﻿using EFsetWidgetFix.Models;
+﻿using DataRecovery.Extensions;
+using DataRecovery.Models;
+using EFsetWidgetFix.Models;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -29,7 +29,7 @@ namespace DataRecovery
 
                 using (var p = new ExcelPackage(fi))
                 {
-                    var queryParamsList = new List<QueryParam>();
+                    var queryParamsList = new List<RequestParameters>();
                     var ws = p.Workbook.Worksheets[1];
                     var firstRow = ExcelWorksheetExtension.GetRow(ws, 1);
                     var customerIdColumnIndex = GetColumnIndex(firstRow, "customer_id");
@@ -45,9 +45,9 @@ namespace DataRecovery
                     var customerIds = customerIdColumn.Skip(1);
                     foreach (var customerId in customerIds)
                     {
-                        var queryParam = new QueryParam
+                        var queryParam = new RequestParameters
                         {
-                            CustomerId = customerId
+                            UserId = customerId
                         };
                         queryParamsList.Add(queryParam);
                     }
@@ -61,14 +61,14 @@ namespace DataRecovery
                     var datesPairs = insertDatesCollection.AllKeys.SelectMany(insertDatesCollection.GetValues, (k, v) => new { key = k, value = v }).Skip(1);
                     for (int i = 0; i < datesPairs.Count(); i++)
                     {
-                        queryParamsList[i].StartDate = datesPairs.ElementAt(i).key;
-                        queryParamsList[i].EndDate = datesPairs.ElementAt(i).value;
+                        queryParamsList[i].From = datesPairs.ElementAt(i).key;
+                        queryParamsList[i].To = datesPairs.ElementAt(i).value;
                     }
 
                     int j = 2;
                     foreach (var queryParamsItem in queryParamsList)
                     {
-                        string jsonString = QueryApi(apiKey, serviceUrl, queryParamsItem.CustomerId, queryParamsItem.StartDate, queryParamsItem.EndDate);
+                        string jsonString = QueryApi(apiKey, serviceUrl, queryParamsItem.UserId, queryParamsItem.From, queryParamsItem.To);
                         
                         if (HasScores(jsonString))
                         {
@@ -107,8 +107,7 @@ namespace DataRecovery
             Console.ReadLine();
 
         }
-
-
+        
         private static int GetColumnIndex(string[] firstRow, string columnName)
         {
             for (int i = 0; i < firstRow.Length; i++)
@@ -161,58 +160,8 @@ namespace DataRecovery
         }
     }
 
-    public class ExcelWorksheetExtension
-    {
-        internal static string[] GetRow(ExcelWorksheet sheet, int rowNumber)
-        {
-            return sheet.Cells[sheet.Dimension.Start.Row, sheet.Dimension.Start.Column, rowNumber + 1, sheet.Dimension.End.Column]
-                .Select(cell => cell.GetValue<string>()).ToArray();
-        }
 
-        internal static string[] GetColumn(ExcelWorksheet sheet, int columnNumber)
-        {
-            List<string> columnValues = new List<string>();
-            foreach (var cell in sheet.Cells[sheet.Dimension.Start.Row, sheet.Dimension.Start.Column + columnNumber, sheet.Dimension.End.Row, columnNumber + 1])
-                columnValues.Add(cell.GetValue<string>());
-            return columnValues.ToArray();
-        }
 
-        internal static DateTime[] ConvertToDate(string[] insertDateColumn)
-        {
-            var collection = new List<DateTime>();
-            
-            foreach (var rawDate in insertDateColumn)
-            {
-                DateTime formattedDate;
-                DateTime.TryParseExact(rawDate.Substring(0, rawDate.Length - 3), "M/d/yyyy H:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out formattedDate);
-                collection.Add(formattedDate);
-            }
-            
-            return collection.ToArray();
-        }
 
-        internal static NameValueCollection GetDatesSet(DateTime[] insertDates)
-        {
-            NameValueCollection collection = new NameValueCollection();
-
-            foreach (var insertDate in insertDates)
-            {
-                if (insertDate.Year > 1900)
-                    collection.Add(insertDate.AddDays(-10).ToString("yyyy-MM-ddThh:mm:ss.000Z"), insertDate.AddDays(10).ToString("yyyy-MM-ddThh:mm:ss.000Z"));
-                else
-                    collection.Add(insertDate.ToString("yyyy-MM-ddThh:mm:ss.000Z"), insertDate.ToString("yyyy-MM-ddThh:mm:ss.000Z"));
-            }
-            return collection;
-        }
-    }
-
-    public class QueryParam
-    {
-        public string CustomerId { get; set; }
-
-        public string StartDate { get; set; }
-
-        public string EndDate { get; set; }
-    }
 
 }

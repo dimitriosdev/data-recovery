@@ -56,8 +56,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\ExcelWorksheetExtension.cs" />
     <Compile Include="Models\AdaptiveTestResult.cs" />
     <Compile Include="Models\FixedTestResult.cs" />
+    <Compile Include="Models\RequestParameters.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
