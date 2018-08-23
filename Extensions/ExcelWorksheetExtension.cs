@@ -26,11 +26,15 @@ namespace DataRecovery.Extensions
         internal static DateTime[] ConvertToDate(string[] insertDateColumn)
         {
             var collection = new List<DateTime>();
-
+            string[] formats = {"M/d/yyyy h:mm:ss tt", "M/d/yyyy h:mm tt",
+                     "MM/dd/yyyy hh:mm:ss", "M/d/yyyy h:mm:ss",
+                     "M/d/yyyy hh:mm tt", "M/d/yyyy hh tt",
+                     "M/d/yyyy h:mm", "M/d/yyyy h:mm",
+                     "MM/dd/yyyy hh:mm", "M/dd/yyyy hh:mm"};
             foreach (var rawDate in insertDateColumn)
             {
-                DateTime formattedDate;
-                DateTime.TryParseExact(rawDate.Substring(0, rawDate.Length - 3), "M/d/yyyy H:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out formattedDate);
+                DateTime formattedDate = DateTime.MinValue; ;
+                DateTime.TryParseExact(rawDate, formats , CultureInfo.InvariantCulture, DateTimeStyles.None, out formattedDate);
                 collection.Add(formattedDate);
             }
 
