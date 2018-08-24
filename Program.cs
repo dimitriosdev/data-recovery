@@ -1,5 +1,6 @@
 ﻿using DataRecovery.Extensions;
 using DataRecovery.Models;
+using DataRecoveryLib;
 using EFsetWidgetFix.Models;
 using OfficeOpenXml;
 using System;
@@ -7,7 +8,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Windows.Forms;
 
 namespace DataRecovery
 {
@@ -16,16 +16,19 @@ namespace DataRecovery
         [STAThread]
         static void Main(string[] args)
         {
+            var validator = new FileValidator();
+            
+
             var serviceUrl = "https://api.efset.org/test-results/";
             var apiKey = "49a6f8e0-0384-4613-809e-bfa54a69dfd1";
 
-            OpenFileDialog fd = new OpenFileDialog();
-            fd.InitialDirectory = @"C:\Users\dimitrios.metozis\Downloads";
-            fd.ShowDialog();
+            
 
-            if (fd.FileName.EndsWith("xlsx"))
+            if (validator.IsValidExcelFile())
             {
-                var fi = new FileInfo(@fd.FileName);
+
+
+                var fi = new FileInfo(validator.FileName);
 
                 using (var p = new ExcelPackage(fi))
                 {
